@@ -1,0 +1,107 @@
+div.tooltip {
+   position: absolute;
+   text-align: center;
+   color:#ffffff;
+   width: 60px;
+   height: 60px;
+   padding: 2px;
+   font: 12px sans-serif;
+   border: 0px;
+   border-radius: 8px;
+   pointer-events: none;
+}
+div.circleTooltip {
+   position: absolute;
+   text-align: left;
+   color: #ffffff;
+   width: 200px;
+   height: 400px;
+   padding: 2px;
+   padding-left: 20px;
+   font: 12px sans-serif;
+   border: 0px;
+   border-radius: 8px;
+   pointer-events: none;
+   background-color: "#808080"
+}
+.sideMenu {}
+.sideMenuTitle {
+   position: absolute;
+   text-align: center;
+   color: #ffffff;
+   padding: 2px;
+   height: 22px;
+   font: 16px sans-serif;
+   border: 0px;
+   font-weight: bold;
+   pointer-events: none;
+}
+.sideMenuText {
+   position: absolute;
+   text-align: left;
+   color: #ffffff;
+   padding: 2px;
+   height: 18px;
+   font: 16px sans-serif;
+   border: 0px;
+   pointer-events: none;
+}
+.axisLabels {
+   position: absolute;
+   text-align: center;
+   color: #ffffff;
+   opacity: .8;
+   width: 40px;
+   height: 10px;
+   padding: 2px;
+   font: 9px sans-serif;
+   border: 0px;
+   border-radius: 8px;
+}
+.search {
+   position: absolute;
+   background: transparent;
+   padding-left: 5px;
+   padding-top: 3px;
+   padding-bottom: 3px;
+   font: 12px sans-serif;
+   border: 1px solid #dadada;
+   border-radius: 7px;
+}
+.searchSuggestion {
+   position: absolute;
+   text-align: left;
+   color: #ffffff;
+   padding-top: 3px;
+   padding-bottom: 3px;
+   padding-left: 20px;
+   padding-right: 5px;
+   font: 12px sans-serif;
+   border: 0px;
+   border-radius: 8px;
+}
+.suggestion {}
+.zoomModeText {
+   position: absolute;
+   text-align: center;
+   color: #ffffff;
+   opacity: .8;
+   width: 40px;
+   height: 10px;
+   padding: 2px;
+   font: 9px sans-serif;
+   border: 0px;
+   border-radius: 8px;
+}
+.download {
+   position: absolute;
+   font: 12px sans-serif;
+   color: #b1cfe7;
+   text-decoration: none;
+}
+.theme {
+   position: absolute;
+   font: 12px sans-serif;
+   color: #b1cfe7;
+   text-decoration: none;
+}
