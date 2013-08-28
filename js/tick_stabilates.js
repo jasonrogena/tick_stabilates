@@ -45,8 +45,8 @@ function TickStabilates() {
    this.originalYs = new Array();
    this.zoomedCircles = new Array();
    
-   this.windowHeight = jQuery(window).height();
-   this.windowWidth = jQuery(window).width();
+   this.windowHeight = jQuery(window).height() - 21;
+   this.windowWidth = jQuery(window).width() - 8;
    this.sideMenuWidth = 400;
    
    var svg = d3.select("body")
@@ -101,10 +101,86 @@ function TickStabilates() {
                                                 .duration(50)      
                                                 .style("opacity", 0);
    });
+   this.body.on("click", function() {
+      if(window.d3.tickStabilatesObject.ignoreClick == false) {
+         if(window.d3.tickStabilatesObject.zoomedCircles.length == 0) {
+            var year = window.d3.tickStabilatesObject.getYear(d3.mouse(this)[0]);
+            var materialIndex = window.d3.tickStabilatesObject.getMaterialIndex(d3.mouse(this)[1]);
+            window.d3.tickStabilatesObject.zoomInOnSector(year,materialIndex);
+            
+         }
+         else {
+            window.d3.tickStabilatesObject.zoomOut();
+            window.d3.tickStabilatesObject.zoomedCircles=new Array();
+            window.d3.tickStabilatesObject.originalYs=new Array();
+            window.d3.tickStabilatesObject.originalXs=new Array();
+         }
+      }
+      else {
+         window.d3.tickStabilatesObject.ignoreClick = false;
+      }
+   });
    
    this.canvas = this.body.append("svg")
                               .attr("width", this.windowWidth)
                               .attr("height", this.windowHeight);
+   
+   this.circles = this.canvas.selectAll("circle")
+                                 .data(this.stabilates)
+                                 .enter()
+                                    .append("circle")
+                                    .attr("r",1.5)
+                                    .attr("fill", function(d) { return window.d3.tickStabilatesObject.getColor(d.parasite_id); })
+                                    .attr("cx", function(d){ return window.d3.tickStabilatesObject.getXFromDate(d.date_prepared); })
+                                    .attr("cy", function(d){ return window.d3.tickStabilatesObject.getY(d.frozen_material_id); })
+                                    .on("mousemove", function(d) {
+                                       var flag = false;
+                                       var zoomedCirclesSize = window.d3.tickStabilatesObject.zoomedCircles.length;
+                                       for(var i = 0; i < zoomedCirclesSize; i++) {
+                                          if(window.d3.tickStabilatesObject.zoomedCircles[i].data()[0].id == d.id) {
+                                             flag = true;
+                                             break;
+                                          }
+                                       }
+                                       if(flag == true) {
+                                          var toolTipText="<table><tr><td>stabilate_no</td><td> : </td><td>"+d.stabilate_no+"</td></tr>";
+                                          toolTipText=toolTipText+"<tr><td>parasite</td><td> : </td><td>"+window.d3.tickStabilatesObject.getParasiteName(d.parasite_id)+"</td></tr>";
+                                          toolTipText=toolTipText+"<tr><td>stock</td><td> : </td><td>"+d.stock+"</td></tr>";
+                                          toolTipText=toolTipText+"<tr><td>source</td><td> : </td><td>"+d.source+"</td></tr>";
+                                          toolTipText=toolTipText+"<tr><td>origin</td><td> : </td><td>"+d.origin+"</td></tr>";
+                                          toolTipText=toolTipText+"<tr><td>number</td><td> : </td><td>"+d.number_in_tank+"</td></tr></table>";
+                                          window.d3.tickStabilatesObject.circleTooltip.transition()
+                                                                                          .duration(50)
+                                                                                          .style("opacity",.7);
+                                          window.d3.tickStabilatesObject.circleTooltip.html(toolTipText)
+                                                                                          .style("left",d3.select(this).attr("cx")+"px")
+                                                                                          .style("top",d3.select(this).attr("cy")+"px");
+                                       }
+                                    })
+                                    .on("mouseout",function(d) {
+                                       window.d3.tickStabilatesObject.circleTooltip.transition()
+                                                                                       .duration(50)      
+                                                                                       .style("opacity", 0);
+                                    });
+   this.canvas.selectAll("rect")
+                  .data(this.frozenMaterial)
+                  .enter()
+                     .append("rect")
+                        .attr("width",this.windowWidth)
+                        .attr("height",0.05)
+                        .attr("fill","white")
+                        .attr("y",function(d){return window.d3.tickStabilatesObject.getSeparatorY(d.id); });
+    
+    var yearDiff = (this.endDate.getYear() + 1) - this.startDate.getYear();
+    var yearPix = this.windowWidth / yearDiff;
+    for(var x = 0; x < yearDiff; x++) {
+      var y = x * yearPix;
+      this.canvas.append("rect")
+                     .attr("width",0.05)
+                     .attr("height",this.windowHeight)
+                     .attr("fill","white")
+                     .attr("x",y);
+   }
 }
 
 //methods start here
@@ -199,8 +275,6 @@ TickStabilates.prototype.getParasiteColors = function () {
  * The x axis labels when in zoom mode are months of the year
  */
 TickStabilates.prototype.createZoomModeAxisLabels = function () {
-   var availableWidth = this.windowWidth - this.sideMenuWidth;
-   var monthWidth = availableWidth / monthsSize;
    var months = new Array();
    months[0] = "Jan";
    months[1] = "Feb";
@@ -214,7 +288,9 @@ TickStabilates.prototype.createZoomModeAxisLabels = function () {
    months[9] = "Oct";
    months[10] = "Nov";
    months[11] = "Dec";
+   var availableWidth = this.windowWidth - this.sideMenuWidth;
    var monthsSize = months.length;
+   var monthWidth = availableWidth / monthsSize;
    for(var i = 0; i < monthsSize; i++) {
       var yPosition = this.windowHeight - 10;
       var xPosition = (monthWidth * i) + 20;
@@ -535,4 +611,312 @@ TickStabilates.prototype.getMaterialIndex = function (y) {
    return parseInt(y / materialHeight, 10);
 };
 
+TickStabilates.prototype.zoomInOnSector = function (year,materialIndex) {
+   //(year,startDate.getYear()+1900,yearDiff,materialIndex,materials,canvas,originalXs,originalYs,zoomedCircles,body,sideMenuTitle,numberOfTickStabilates,numberOfParasites,toolTip,parasites,parasitesPresent,parasiteColors)
+   var startYear = window.d3.tickStabilatesObject.startDate.getYear() + 1900;
+   var yearDiff = (window.d3.tickStabilatesObject.endDate.getYear() + 1) - window.d3.tickStabilatesObject.startDate.getYear();
+   var materialHeight = window.d3.tickStabilatesObject.windowHeight / window.d3.tickStabilatesObject.frozenMaterial.length;
+   var yearWidth = window.d3.tickStabilatesObject.windowWidth / yearDiff;
+   
+   var xScaleFactor = (window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) / yearWidth;
+   var sectorX = yearWidth * (year - startYear);
+   
+   var yScaleFactor = window.d3.tickStabilatesObject.windowHeight / materialHeight;
+   var sectorY = materialHeight * materialIndex;
+   
+   var noOfCirclesToBeAffected = 0;
+   window.d3.tickStabilatesObject.canvas.selectAll("circle").each( function(d, i) {
+      var thisCircle = d3.select(this);
+      var x=thisCircle.attr("cx");
+      var y=thisCircle.attr("cy");
+      if((x >= sectorX && x < (sectorX + yearWidth)) && (y >= sectorY && y < (sectorY + materialHeight))) {
+         noOfCirclesToBeAffected++;
+      }
+   });
+   
+   if(noOfCirclesToBeAffected > 0) {
+      window.d3.tickStabilatesObject.canvas.selectAll("rect")
+                                             .transition()
+                                                .duration(800)
+                                                .style("opacity",0);
+                                                
+      window.d3.tickStabilatesObject.canvas.selectAll("circle")
+                                             .each( function(d, i) {
+                                                var thisCircle=d3.select(this);
+                                                var x=thisCircle.attr("cx");
+                                                var y=thisCircle.attr("cy");
+                                                if((x >= sectorX && x < (sectorX + yearWidth)) && (y >= sectorY && y < (sectorY + materialHeight))) {
+                                                   window.d3.tickStabilatesObject.zoomedCircles[window.d3.tickStabilatesObject.zoomedCircles.length] = thisCircle;
+                                                   window.d3.tickStabilatesObject.originalXs[window.d3.tickStabilatesObject.originalXs.length] = x;
+                                                   window.d3.tickStabilatesObject.originalYs[window.d3.tickStabilatesObject.originalYs.length] = y;
+                                                   var relativeX = x - sectorX;
+                                                   var newX = parseInt(relativeX * xScaleFactor, 10);
+                                                   
+                                                   var relativeY = y - sectorY;
+                                                   var newY = parseInt(relativeY * yScaleFactor, 10);
+                                                   
+                                                   var tData = thisCircle.data()[0];
+                                                   thisCircle.transition()
+                                                               .duration(800)
+                                                               .attr("cy",newY)
+                                                               .attr("cx",newX)
+                                                               .attr("r", function() { return window.d3.tickStabilatesObject.getRadius(tData.number_in_tank); });
+                                                }
+                                                else {
+                                                   thisCircle.transition()
+                                                               .duration(800)
+                                                               .style("opacity",0);
+                                                }
+                                             });
+      //create the side menu
+      var parasitesFound = new Array();
+      var zoomedCirclesSize = window.d3.tickStabilatesObject.zoomedCircles.length;
+      for( var x = 0; x < zoomedCirclesSize; x++) {
+         var tempData = window.d3.tickStabilatesObject.zoomedCircles[x].data()[0];
+         var parasitesSize = window.d3.tickStabilatesObject.parasites.length;
+         for( var y = 0; y < parasitesSize; y++) {
+            if(window.d3.tickStabilatesObject.parasites[y].id == tempData.parasite_id) {
+               var parasiteName = window.d3.tickStabilatesObject.parasites[y].parasite_name;
+               var flag = false;
+               var parasitesFoundSize = parasitesFound.length;
+               for( var z = 0; z < parasitesFoundSize; z++) {
+                  if(parasiteName == parasitesFound[z]) {
+                     flag = true;
+                     break;
+                  }
+               }
+               if(flag == false) {
+                  parasitesFound[parasitesFoundSize] = parasiteName;
+               }
+               break;
+            }
+         }
+      }
+      
+      window.d3.tickStabilatesObject.canvas.append("rect")
+                                             .attr("class","sideMenu")
+                                             .attr("width",0.5)
+                                             .attr("height",window.d3.tickStabilatesObject.windowHeight)
+                                             .attr("fill",function()
+                                             {
+                                                if(window.d3.tickStabilatesObject.body.style("background-color") == "rgb(4, 17, 23)")//dark theme
+                                                {
+                                                   return "#ffffff";
+                                                }
+                                                else
+                                                {
+                                                   return "#000000";
+                                                }
+                                             })
+                                             .attr("x",window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth);
+      
+      window.d3.tickStabilatesObject.sideMenuTitle.html(year+", "+window.d3.tickStabilatesObject.frozenMaterial[materialIndex].material_name)
+                                                   .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) + 30) + "px")
+                                                   .style("width",(window.d3.tickStabilatesObject.sideMenuWidth - 60) + "px")
+                                                   .style("height","25px")
+                                                   .style("top","20px");
+      
+      window.d3.tickStabilatesObject.numberOfTickStabilates.html("Number of Tick Stabilates : "+noOfCirclesToBeAffected)
+                                                            .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) + 50) + "px")
+                                                            .style("width",(window.d3.tickStabilatesObject.sideMenuWidth - 80) + "px")
+                                                            .style("height","16px")
+                                                            .style("top","60px");
+                                                            
+      window.d3.tickStabilatesObject.numberOfParasites.html("Parasites found (" + parasitesFound.length + ")")
+                                                      .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) + 50) + "px")
+                                                      .style("width",(window.d3.tickStabilatesObject.sideMenuWidth - 80)+"px")
+                                                      .style("height","16px")
+                                                      .style("top","85px");
+      
+      var parasitesPresentText = "";
+      var parasitesFoundSize = parasitesFound.length;
+      for(var i = 0; i < parasitesFoundSize; i++) {
+         parasitesPresentText=parasitesPresentText+'<p style="color:' + window.d3.tickStabilatesObject.getColorUsingName(parasitesFound[i]) + ';"> - '+parasitesFound[i]+'</p>';
+      }
+      
+      window.d3.tickStabilatesObject.parasitesPresent.html(parasitesPresentText)
+                                                      .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) + 65) + "px")
+                                                      .style("width",(window.d3.tickStabilatesObject.sideMenuWidth - 80) + "px")
+                                                      .style("height","400px")
+                                                      .style("color","grey")
+                                                      .style("top","110px");
+      
+      window.d3.tickStabilatesObject.body.selectAll(".sideMenuTitle").transition()
+                                                                        .duration(800)
+                                                                        .style("opacity",.8);
+      
+      window.d3.tickStabilatesObject.body.selectAll(".sideMenuText").transition()
+                                                                        .duration(800)
+                                                                        .style("opacity",.8);
+      
+      window.d3.tickStabilatesObject.toolTip.transition()
+                                                .duration(800)
+                                                .style("opacity",0)
+                                                .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth)) + "px");
+      
+      window.d3.tickStabilatesObject.body.selectAll(".axisLabels").transition()
+                                                                     .duration(800)
+                                                                     .style("opacity",0);
+      window.d3.tickStabilatesObject.body.selectAll(".search").transition()
+                                                                  .duration(800)
+                                                                  .style("opacity",0);
+      window.d3.tickStabilatesObject.body.selectAll(".zoomModeText").transition()
+                                                                        .duration(800)
+                                                                        .style("opacity",0.8);
+      window.d3.tickStabilatesObject.body.selectAll(".download").transition()
+                                                                  .duration(800)
+                                                                  .style("top",((window.d3.tickStabilatesObject.windowHeight - 40)) + "px")
+                                                                  .style("font","14px sans-serif");
+      window.d3.tickStabilatesObject.body.selectAll(".download").transition()
+                                                                  .duration(800)
+                                                                  .delay(800)
+                                                                  .style("font","16px sans-serif")
+                                                                  .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) + 180)+"px");
+      window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                                                               .duration(300)
+                                                               .style("left","20px");
+      window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                                                               .duration(800)
+                                                               .delay(300)
+                                                               .style("top",((window.d3.tickStabilatesObject.windowHeight - 40)) + "px")
+                                                               .style("font","14px sans-serif");
+      window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                                                               .duration(800)
+                                                               .delay(1100)
+                                                               //.style("top",((getWindowHeight()-40))+"px")
+                                                               .style("font","16px sans-serif")
+                                                               .style("left",((window.d3.tickStabilatesObject.windowWidth - window.d3.tickStabilatesObject.sideMenuWidth) + 40) + "px");
+      window.d3.tickStabilatesObject.body.selectAll(".suggestion").remove();
+   }
+};
 
+TickStabilates.prototype.getRadius = function (x) {
+   var y = x * (20 / 49);
+   return y + (225 / 49);
+};
+
+TickStabilates.prototype.getColorUsingName = function (parasiteName) {
+   var parasitesSize = window.d3.tickStabilatesObject.parasites.length;
+   for(var x = 0; x < parasitesSize; x++) {
+      if(parasiteName == window.d3.tickStabilatesObject.parasites[x].parasite_name) {
+         return window.d3.tickStabilatesObject.parasiteColors[x];
+      }
+   }
+};
+
+TickStabilates.prototype.zoomOut = function () {
+   window.d3.tickStabilatesObject.canvas.selectAll(".sideMenu").remove();
+   window.d3.tickStabilatesObject.body.selectAll(".sideMenuTitle").transition()
+                                                                     .duration(800)
+                                                                     .style("opacity",0);
+   window.d3.tickStabilatesObject.body.selectAll(".search").transition()
+                                                               .duration(800)
+                                                               .style("opacity",1);
+   window.d3.tickStabilatesObject.body.selectAll(".sideMenuText").transition()
+                                                                     .duration(800)
+                                                                     .style("opacity",0);
+   window.d3.tickStabilatesObject.body.selectAll(".axisLabels").transition()
+                                                                  .duration(800)
+                                                                  .style("opacity",.8);
+   window.d3.tickStabilatesObject.body.selectAll(".zoomModeText").transition()
+                                                                     .duration(800)
+                                                                     .style("opacity",0);
+   window.d3.tickStabilatesObject.body.selectAll(".download").transition()
+                                                               .duration(800)
+                                                               .delay(300)
+                                                               .style("left","20px")
+                                                               .style("font","14px sans-serif");
+                              //.style("top","20px");
+   window.d3.tickStabilatesObject.body.selectAll(".download").transition()
+                                                               .duration(800)
+                                                               .delay(1100)
+                                                               //.style("left","20px")
+                                                               .style("font","12px sans-serif")
+                                                               .style("top","20px");
+   window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                                                            .duration(800)
+                                                            .style("left","20px")
+                                                            .style("font","14px sans-serif");
+   window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                                                            .duration(800)
+                                                            .delay(800)
+                                                            //.style("left","20px")
+                                                            .style("font","12px sans-serif")
+                                                            .style("top","20px");
+   window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                                                            .duration(300)
+                                                            .delay(1600)
+                                                            .style("left","100px");
+   
+   var zoomedCirclesSize = window.d3.tickStabilatesObject.zoomedCircles.length;
+   for(var i = 0; i < zoomedCirclesSize; i++) {
+      window.d3.tickStabilatesObject.zoomedCircles[i].transition()
+                                                         .duration(800)
+                                                         .attr("cy",window.d3.tickStabilatesObject.originalYs[i])
+                                                         .attr("cx",window.d3.tickStabilatesObject.originalXs[i])
+                                                         .attr("r",1.5);
+   }
+   //reset visibility of all rects
+   window.d3.tickStabilatesObject.canvas.selectAll("rect")
+                                          .transition()
+                                          .duration(800)
+                                          .style("opacity",1);
+      //reset visibility of all circles
+   window.d3.tickStabilatesObject.canvas.selectAll("circle")
+                                          .transition()
+                                          .delay(800)
+                                          .duration(800)
+                                          .style("opacity",1);
+};
+
+TickStabilates.prototype.getColor = function(parasiteID) {
+   var parasitesSize = window.d3.tickStabilatesObject.parasites.length;
+   for(var x = 0; x < parasitesSize; x++) {
+      if(parasiteID == window.d3.tickStabilatesObject.parasites[x].id) {
+         return window.d3.tickStabilatesObject.parasiteColors[x];
+      }
+   }
+};
+
+TickStabilates.prototype.getXFromDate = function(dateText) {
+   var date = new Date(dateText);
+   var yearDiff = (window.d3.tickStabilatesObject.endDate.getYear() + 1) - window.d3.tickStabilatesObject.startDate.getYear();
+   var widthEquiv= yearDiff * 31557600000;
+   var startYear=new Date((window.d3.tickStabilatesObject.startDate.getYear()+1900),1,1);
+   var fromStartDate=date.getTime()-startYear.getTime();
+   
+   var x=(window.d3.tickStabilatesObject.windowWidth * fromStartDate) / widthEquiv;
+   
+   if(x < 4 || isNaN(x)) {
+      x = 4;
+   }
+   return x;
+};
+
+TickStabilates.prototype.getY = function(materialID) {
+   var materialsSize = window.d3.tickStabilatesObject.frozenMaterial.length;
+   var sectionHeight = window.d3.tickStabilatesObject.windowHeight / materialsSize;
+   var count = 0; 
+   while(count < materialsSize) {
+      if(materialID == window.d3.tickStabilatesObject.frozenMaterial[count].id) {
+         var upperLimit=((count+1)*sectionHeight);
+         var lowerLimit=(count*sectionHeight);
+         var y = Math.floor(Math.random()*(upperLimit - lowerLimit + 1))+lowerLimit;
+         if(y < 4) {
+            y = 4;
+         }
+         return y;
+      }
+      count++;
+   }
+};
+
+TickStabilates.prototype.getSeparatorY = function (materialID) {
+   var materialsSize = window.d3.tickStabilatesObject.frozenMaterial.length;
+   var sectionHeight = window.d3.tickStabilatesObject.windowHeight / materialsSize;
+   for(var x = 0; x < materialsSize; x++) {
+      if(materialID == window.d3.tickStabilatesObject.frozenMaterial[x].id) {
+            return sectionHeight * x;
+         }
+   }
+};
