@@ -17,7 +17,7 @@
 function TickStabilates() {
    //constructor
    window.d3.tickStabilatesObject = this;
-   var dataURL = "./php/getTickMaterial.php"; 
+   var dataURL = "./php/getTickStabilates.php"; 
    var jsonObject = this.fetchDatabaseData(dataURL);
    this.stabilates = jsonObject.stabilates;
    this.parasites = jsonObject.parasites;
