@@ -431,7 +431,7 @@ TickStabilates.prototype.createThemeLink = function () {
                .on("click",function()
                   {
                      window.d3.tickStabilatesObject.ignoreClick = true;
-                     //TODO: call change theme method
+                     window.d3.tickStabilatesObject.changeTheme();
                   });
 };
 
@@ -919,4 +919,86 @@ TickStabilates.prototype.getSeparatorY = function (materialID) {
             return sectionHeight * x;
          }
    }
+};
+
+TickStabilates.prototype.changeTheme = function () {
+   if(window.d3.tickStabilatesObject.body.style("background-color")=="rgb(4, 17, 23)") {
+      window.d3.tickStabilatesObject.body.transition()
+                  .duration(500)
+                  .style("background-color", "#a4a4a4");
+      window.d3.tickStabilatesObject.body.selectAll("rect").transition()
+                  .duration(500)
+                  .attr("fill","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".axisLabels").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".tooltip").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".circleTooltip").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".search").transition()
+                  .duration(500)
+                  .style("border","1px solid #000000")
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".searchSuggestion").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".sideMenuTitle").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".sideMenuText").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".zoomModeText").transition()
+                  .duration(500)
+                  .style("color","#000000");
+      window.d3.tickStabilatesObject.body.selectAll(".download").transition()
+                  .duration(500)
+                  .style("color","#6f3d0b");
+      window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                  .duration(500)
+                  .style("color","#6f3d0b");
+   }
+   else if(window.d3.tickStabilatesObject.body.style("background-color")=="rgb(164, 164, 164)") {
+      window.d3.tickStabilatesObject.body.transition()
+                  .duration(500)
+                  .style("background-color", "#041117");
+      window.d3.tickStabilatesObject.body.selectAll("rect").transition()
+                  .duration(500)
+                  .attr("fill","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".axisLabels").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".tooltip").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".circleTooltip").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".search").transition()
+                  .duration(500)
+                  .style("border","1px solid #dadada")
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".searchSuggestion").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".sideMenuTitle").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".sideMenuText").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".zoomModeText").transition()
+                  .duration(500)
+                  .style("color","#ffffff");
+      window.d3.tickStabilatesObject.body.selectAll(".download").transition()
+                  .duration(500)
+                  .style("color","#b1cfe7");
+      window.d3.tickStabilatesObject.body.selectAll(".theme").transition()
+                  .duration(500)
+                  .style("color","#b1cfe7");
+   }
+
 };
