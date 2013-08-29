@@ -105,3 +105,13 @@ div.circleTooltip {
    color: #b1cfe7;
    text-decoration: none;
 }
+.downloadDialog {
+   overflow: auto;
+   position: absolute;
+   color: #0000000;
+   background-color: #FFFFFF;
+   padding: 2px;
+   font: 12px sans-serif;
+   border: 0px;
+   border-radius: 2px;
+}

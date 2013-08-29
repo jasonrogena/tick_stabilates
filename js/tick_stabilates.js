@@ -79,6 +79,8 @@ function TickStabilates() {
    this.createYAxisLabels();
    this.createXAxisLabels();
    this.createDownloadLink();
+   this.stabilateColumns = new Array();
+   this.downloadDialog = this.createDownloadDialog();
    this.createThemeLink();
    this.lastNumberOfChars = 0;
    this.searchBox = this.createSearchBox();
@@ -367,10 +369,10 @@ TickStabilates.prototype.getXAxisPosition = function (yearIndex) {
  * This method creates the download link
  */
 TickStabilates.prototype.createDownloadLink = function () {
-   this.body.append("a")
-         .attr("download","Tick_Stabilates.csv")
+   this.body.append("div")
+         /*.attr("download","Tick_Stabilates.csv")*/
          .attr("class","download")
-         .attr("href","")
+         /*.attr("href","")*/
          .html("Download")
          .style("left","20px")
          .style("top","20px")
@@ -378,10 +380,11 @@ TickStabilates.prototype.createDownloadLink = function () {
          .on("mouseout",function() { window.d3.tickStabilatesObject.ignoreFocus = false; })
          .on("click",function() {
                         window.d3.tickStabilatesObject.ignoreClick = true;
-                        var thisA = d3.select(this);//this here means this current circle
+                        window.d3.tickStabilatesObject.downloadDialog.style("opacity",1);
+                        /*var thisA = d3.select(this);//this here means this current circle
                         thisA.attr("href",function() {
                         return "data:text/csv;charset=utf-8,"+window.d3.tickStabilatesObject.getDownloadText();
-                     });
+                     });*/
          });
 };
 
@@ -391,11 +394,32 @@ TickStabilates.prototype.createDownloadLink = function () {
  * @return URI
  */
 TickStabilates.prototype.getDownloadText = function () {
-   var csv="stabilate_no, date_prepared, number_in_tank, parasite, stock, material_frozen, source, origin, source_species_id, experiment_no, vol_prepared, medium_used, cryoprotectant, no_stored, unit, colour, ticks_ground, ticks_ml, mean_infect, infected_acin, storage_loc, stabilate_test, testing_experiment, testing_date, stabilate_history, stabilate_passages, remarks\n";
+   //var csv="stabilate_no, date_prepared, number_in_tank, parasite, stock, material_frozen, source, origin, source_species_id, experiment_no, vol_prepared, medium_used, cryoprotectant, no_stored, unit, colour, ticks_ground, ticks_ml, mean_infect, infected_acin, storage_loc, stabilate_test, testing_experiment, testing_date, stabilate_history, stabilate_passages, remarks\n";
+   var csv = "";
+   var stabilateColumnsSize = window.d3.tickStabilatesObject.stabilateColumns.length;
+   for(var i = 0 ; i < stabilateColumnsSize; i++) {
+      csv = csv + window.d3.tickStabilatesObject.stabilateColumns[i]+", ";
+   }
+   csv = csv +"\n";
+   
    this.canvas.selectAll("circle").each( function(d) {
       var thisCircle = d3.select(this);//this here means this circle
       if(thisCircle.style("opacity") != 0) {
-         var thisCSV=d.stabilate_no+", "+d.date_prepared+", "+d.number_in_tank+", "+window.d3.tickStabilatesObject.getParasiteName(d.parasite_id)+", "+d.stock+", "+window.d3.tickStabilatesObject.getMaterialName(d.frozen_material_id)+", "+d.source+", "+d.origin+", "+d.source_species_id+", "+d.experiment_no+", "+d.vol_prepared+", "+d.medium_used+", "+d.cryoprotectant+", "+d.no_stored+", "+d.unit+", "+d.colour+", "+d.ticks_ground+", "+d.ticks_ml+", "+d.mean_infect+", "+d.infected_acin+", "+d.storage_loc+", "+d.stabilate_test+", "+d.testing_experiment+", "+d.testing_date+", "+d.stabilate_history+", "+d.stabilate_passages+", "+d.remarks+"\n";
+         //var thisCSV=d.stabilate_no+", "+d.date_prepared+", "+d.number_in_tank+", "+window.d3.tickStabilatesObject.getParasiteName(d.parasite_id)+", "+d.stock+", "+window.d3.tickStabilatesObject.getMaterialName(d.frozen_material_id)+", "+d.source+", "+d.origin+", "+d.source_species_id+", "+d.experiment_no+", "+d.vol_prepared+", "+d.medium_used+", "+d.cryoprotectant+", "+d.no_stored+", "+d.unit+", "+d.colour+", "+d.ticks_ground+", "+d.ticks_ml+", "+d.mean_infect+", "+d.infected_acin+", "+d.storage_loc+", "+d.stabilate_test+", "+d.testing_experiment+", "+d.testing_date+", "+d.stabilate_history+", "+d.stabilate_passages+", "+d.remarks+"\n";
+         var thisCSV = "";
+         var stabilateColumnsSize = window.d3.tickStabilatesObject.stabilateColumns.length;
+         for(var i = 0; i < stabilateColumnsSize; i++) {
+            if(window.d3.tickStabilatesObject.stabilateColumns[i] == "material_frozen") {
+               thisCSV = thisCSV + window.d3.tickStabilatesObject.getMaterialName(d.frozen_material_id) + ", ";
+            }
+            else if(window.d3.tickStabilatesObject.stabilateColumns[i] == "parasite") {
+               thisCSV = thisCSV + window.d3.tickStabilatesObject.getParasiteName(d.parasite_id) + ", ";
+            }
+            else {
+               thisCSV = thisCSV + d[window.d3.tickStabilatesObject.stabilateColumns[i]]+", ";
+            }  
+         }
+         thisCSV = thisCSV + "\n";
          csv=csv+thisCSV;
       }
    });
@@ -1160,4 +1184,85 @@ TickStabilates.prototype.changeTheme = function () {
                   .style("color","#b1cfe7");
    }
 
+};
+
+TickStabilates.prototype.createDownloadDialog = function () {
+   var dialogWidth = 300;
+   var dialogHeight = 300;
+   var dialogX = this.windowWidth/2 - dialogWidth/2;
+   var dialogY = this.windowHeight/2 - dialogHeight/2;
+   var downloadDialog = this.body.append("div")
+                                    .attr("class", "downloadDialog")
+                                    .style("left", dialogX + "px")
+                                    .style("top", dialogY + "px")
+                                    .style("width", dialogWidth + "px")
+                                    .style("height", dialogHeight + "px")
+                                    .style("opacity",0)
+                                    .style("padding-bottom", "10px");
+   downloadDialog.on("mousemove", function() { 
+                        if(d3.select(this).style("opacity") == 1) {
+                           window.d3.tickStabilatesObject.ignoreFocus = true;
+                        }
+                     })
+                  .on("mouseout", function() { 
+                        if(d3.select(this).style("opacity") == 1) {
+                           window.d3.tickStabilatesObject.ignoreFocus = false;
+                        }
+                     })
+                  .on("click", function() {
+                        if(d3.select(this).style("opacity") == 1) {
+                              window.d3.tickStabilatesObject.ignoreClick = true;
+                           }
+                     });
+   downloadDialog.append("p").text("Please select what data on the stabilates you want to download")
+                      .style("margin-left","20px");
+   var downloadDialogTable = downloadDialog.append("table");
+   for(key in this.stabilates[0]) {
+      //this.stabilates[0][key];
+      if(key != "id" && key != "parasite_id" && key != "frozen_material_id") {
+         var tr = downloadDialogTable .append("tr");
+         var td1 = tr.append("td");
+         var checkBox = td1.append("input")
+                        .attr("type", "checkbox")
+                        .attr("value", key)
+                        .attr("checked", "true")
+                        .style("margin-right","10px")
+                        .style("margin-left","20px");
+         window.d3.tickStabilatesObject.stabilateColumns.push(key);
+         var td2 = tr.append("td");
+         td2.append("p").text(key);
+         checkBox.on("click", function() {
+            if(this.checked == true) {
+               window.d3.tickStabilatesObject.stabilateColumns.push(this.value);
+            }
+            else {
+               window.d3.tickStabilatesObject.stabilateColumns.splice(window.d3.tickStabilatesObject.getStabilateColumnIndex(this.value), 1);
+            }
+         });
+      }
+   }
+   
+   downloadDialog.append("button").html("Okay")
+                     .style("position", "absolute")
+                     .style("left", (dialogWidth - 80) + "px")
+                     .on("click", function() {
+                        var thisA = window.d3.tickStabilatesObject.downloadDialog.append("a")
+                                                                     .attr("download","Tick_Stabilates.csv");
+                        thisA.attr("href",function() {
+                                    return "data:text/csv;charset=utf-8,"+window.d3.tickStabilatesObject.getDownloadText();
+                                 });
+                        thisA[0][0].click();
+                        thisA.remove();
+                        window.d3.tickStabilatesObject.downloadDialog.style("opacity", 0);
+                     });
+   return downloadDialog;
+};
+
+TickStabilates.prototype.getStabilateColumnIndex = function (name) {
+   var stabilateColumnsSize = window.d3.tickStabilatesObject.stabilateColumns.length;
+   for(var i = 0; i < stabilateColumnsSize; i ++) {
+      if(window.d3.tickStabilatesObject.stabilateColumns[i] == name) {
+         return i;
+      }
+   }
 };
