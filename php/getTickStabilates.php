@@ -27,7 +27,7 @@ class DataHandler {
    }
    
    /**
-    * This function initializes the $settings variable
+    * This method initializes the $settings variable
     * 
     * Settings are parsed from various ini files, including:
     *  -- mysql_creds.ini, preferably stored outside the project's root dir for security reasons.
@@ -49,7 +49,7 @@ class DataHandler {
    }
    
    /**
-    * This function connects to the mysql database using credentials stored in the $settings variable
+    * This method connects to the mysql database using credentials stored in the $settings variable
     */
    private function connectToDatabase() {
       if($this->settings != null) {
@@ -60,7 +60,7 @@ class DataHandler {
    }
 
    /**
-    * This function runs the provided MySQL query
+    * This method runs the provided MySQL query
     * 
     * @param $query - String of the actual query to be run
     * @param $getResult - Boolean value indicating wether you are expecting a result
@@ -82,7 +82,7 @@ class DataHandler {
    }
    
    /**
-    * This function returns a JsonObject to whatever called this php file
+    * This method returns a JsonObject to whatever called this php file
     * 
     * @param $jsonArray - an array of the data you want to be encoded into a Json object before being sent
     */

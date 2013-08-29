@@ -221,21 +221,18 @@ TickStabilates.prototype.getSearchIndexes = function () {
    var searchIndexesSize = 0;
    
    var parasitesSize = window.d3.tickStabilatesObject.parasites.length;
-   console.log("parasite size : "+parasitesSize);
    for( var i = 0; i < parasitesSize; i++ ) {
       searchIndexes[searchIndexesSize] = window.d3.tickStabilatesObject.parasites[i].parasite_name;
       searchIndexesSize++;
    }
    
    var materialsSize = window.d3.tickStabilatesObject.frozenMaterial.length;
-   console.log("materials size : "+materialsSize);
    for( var i = 0; i < materialsSize; i++) {
       searchIndexes[searchIndexesSize] = window.d3.tickStabilatesObject.frozenMaterial[i].material_name;
       searchIndexesSize++;
    }
    
    var stabilateSize = window.d3.tickStabilatesObject.stabilates.length;
-   console.log("stabilates size : "+stabilateSize);
    for( var i = 0; i < stabilateSize; i++) {
       searchIndexes[searchIndexesSize] = window.d3.tickStabilatesObject.stabilates[i].stabilate_no;
       searchIndexesSize++;
@@ -496,7 +493,7 @@ TickStabilates.prototype.createSearchBox = function () {
                .on("mousemove",function() { window.d3.tickStabilatesObject.ignoreFocus = true; })
                .on("mouseout",function() {
                                  window.d3.tickStabilatesObject.ignoreFocus = false;
-                                 window.d3.tickStabilatesObject.body.selectAll(".suggestion").remove();
+                                 //window.d3.tickStabilatesObject.body.selectAll(".suggestion").remove();
                               });
                            
 };
@@ -591,7 +588,7 @@ TickStabilates.prototype.doMaterialSearch = function (searchBox) {
  * 
  * @param {DOM Object} searchBox
  */
-TickStabilates.prototype.doStabilateSearch = function (seachBox) {
+TickStabilates.prototype.doStabilateSearch = function (searchBox) {
    window.d3.tickStabilatesObject.canvas.selectAll("circle").each( function(d) {
       var thisCircle=d3.select(this);
       
@@ -652,7 +649,10 @@ TickStabilates.prototype.createSearchSuggestionBox = function () {
                .style("left",function() { return window.d3.tickStabilatesObject.searchBox.style("left"); })
                .on("click",function() { window.d3.tickStabilatesObject.ignoreClick = true; })
                .on("mousemove",function() { window.d3.tickStabilatesObject.ignoreFocus = true; })
-               .on("mouseout",function() { window.d3.tickStabilatesObject.ignoreFocus = false; });
+               .on("mouseout",function() { 
+                                 window.d3.tickStabilatesObject.ignoreFocus = false;
+                                 //window.d3.tickStabilatesObject.body.selectAll(".suggestion").remove();
+                              });
 };
 
 /**
@@ -662,6 +662,7 @@ TickStabilates.prototype.createSearchSuggestionBox = function () {
  * @param {Integer} y : the cursor's Y coordinate
  */
 TickStabilates.prototype.setTooltip = function (x, y) {
+   window.d3.tickStabilatesObject.body.selectAll(".suggestion").remove();
    var startYear = window.d3.tickStabilatesObject.startDate.getYear()+1900;
    var yearDiff = (window.d3.tickStabilatesObject.endDate.getYear() + 1) - window.d3.tickStabilatesObject.startDate.getYear();
    var actualYear = window.d3.tickStabilatesObject.getYear(x);
@@ -929,6 +930,7 @@ TickStabilates.prototype.getColorUsingName = function (parasiteName) {
  * Refer to the zoomInOnSector method
  */
 TickStabilates.prototype.zoomOut = function () {
+   window.d3.tickStabilatesObject.searchBox[0][0].value = "Search";
    window.d3.tickStabilatesObject.canvas.selectAll(".sideMenu").remove();
    window.d3.tickStabilatesObject.body.selectAll(".sideMenuTitle").transition()
                                                                      .duration(800)
