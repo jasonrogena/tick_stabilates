@@ -105,6 +105,7 @@ function TickStabilates() {
    });
    this.body.on("click", function() {
       if(window.d3.tickStabilatesObject.ignoreClick == false) {
+         window.d3.tickStabilatesObject.downloadDialog.style("opacity", 0);
          if(window.d3.tickStabilatesObject.zoomedCircles.length == 0) {
             var year = window.d3.tickStabilatesObject.getYear(d3.mouse(this)[0]);
             var materialIndex = window.d3.tickStabilatesObject.getMaterialIndex(d3.mouse(this)[1]);
@@ -1255,6 +1256,8 @@ TickStabilates.prototype.createDownloadDialog = function () {
                         thisA.remove();
                         window.d3.tickStabilatesObject.downloadDialog.style("opacity", 0);
                      });
+   downloadDialog.append("div")
+                     .style("height" ,"30px");
    return downloadDialog;
 };
 
