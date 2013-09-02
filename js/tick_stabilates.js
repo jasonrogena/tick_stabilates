@@ -1187,6 +1187,9 @@ TickStabilates.prototype.changeTheme = function () {
 
 };
 
+/**
+ * This method creates the Download Dialog
+ */
 TickStabilates.prototype.createDownloadDialog = function () {
    var dialogWidth = 300;
    var dialogHeight = 300;
@@ -1215,8 +1218,9 @@ TickStabilates.prototype.createDownloadDialog = function () {
                               window.d3.tickStabilatesObject.ignoreClick = true;
                            }
                      });
-   downloadDialog.append("p").text("Please select what data on the stabilates you want to download")
-                      .style("margin-left","20px");
+   downloadDialog.append("p").text("Please select the type of data you want to download")
+                      .style("margin-left","20px")
+                      .style("font", "14px sans-serif");
    var downloadDialogTable = downloadDialog.append("table");
    for(key in this.stabilates[0]) {
       //this.stabilates[0][key];
@@ -1261,6 +1265,13 @@ TickStabilates.prototype.createDownloadDialog = function () {
    return downloadDialog;
 };
 
+/**
+ * This method returns the index of a stabilates column
+ * 
+ * @param {String} name : the name of the column
+ * 
+ * @return Integer
+ */
 TickStabilates.prototype.getStabilateColumnIndex = function (name) {
    var stabilateColumnsSize = window.d3.tickStabilatesObject.stabilateColumns.length;
    for(var i = 0; i < stabilateColumnsSize; i ++) {
