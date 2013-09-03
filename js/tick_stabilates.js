@@ -757,6 +757,7 @@ TickStabilates.prototype.zoomInOnSector = function (year,materialIndex) {
       }
    });
    
+   //make all circles that fit criteria visible and all others invisible
    if(noOfCirclesToBeAffected > 0) {
       window.d3.tickStabilatesObject.canvas.selectAll("rect")
                                              .transition()
@@ -816,6 +817,7 @@ TickStabilates.prototype.zoomInOnSector = function (year,materialIndex) {
          }
       }
       
+      //initialize transitions on all other UI elements
       window.d3.tickStabilatesObject.canvas.append("rect")
                                              .attr("class","sideMenu")
                                              .attr("width",0.5)
@@ -1266,7 +1268,7 @@ TickStabilates.prototype.createDownloadDialog = function () {
 };
 
 /**
- * This method returns the index of a stabilates column
+ * This method gets the index of a stabilates column using its name 
  * 
  * @param {String} name : the name of the column
  * 
